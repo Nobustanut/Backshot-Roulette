@@ -1,0 +1,51 @@
+import socket
+import threading
+
+SERVER_IP = input("Enter server IP: ")
+PORT = 5555
+
+player_id = None
+my_turn = False
+
+def listen(server):
+    global my_turn, player_id
+
+    while True:
+        try:
+            msg = server.recv(1024).decode()
+
+            if msg.startswith("CONNECTED:"):
+                player_id = int(msg.split(":")[1])
+                print(f"Connected as Player {player_id}")
+
+            elif msg.startswith("PLAYER"):
+                sender = int(msg[6])
+                action = msg.split(":", 1)[1]
+
+                print(f"Player {sender} did: {action}")
+
+                # If the other player acted, it's now your turn
+                if sender != player_id:
+                    my_turn = True
+                    print("Your turn.")
+
+        except:
+            print("Disconnected from server.")
+            break
+
+def main():
+    global my_turn
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.connect((SERVER_IP, PORT))
+
+    threading.Thread(target=listen, args=(server,), daemon=True).start()
+
+    while True:
+        if my_turn:
+            action = input("Enter action: ")
+            server.send(f"ACTION:{action}".encode())
+            my_turn = False
+
+if __name__ == "__main__":
+    main()
