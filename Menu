@@ -1,0 +1,46 @@
+import random
+import time
+
+# ------------------------------
+# GAME SETUP
+# ------------------------------
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.hp = 3
+        self.items = []
+
+    def is_alive(self):
+        return self.hp > 0
+
+def load_chambers():
+    live = random.randint(1, 3)
+    blanks = random.randint(1, 3)
+    chambers = ["LIVE"] * live + ["BLANK"] * blanks
+    random.shuffle(chambers)
+    return chambers
+
+def draw_items():
+    item_pool = ["Cigarette", "Magnifying Glass", "Handcuffs", "Adrenaline"]
+    return random.sample(item_pool, 2)
+
+def print_status(player, dealer):
+    print(f"\n{player.name} HP: {player.hp} | Dealer HP: {dealer.hp}")
+    print(f"Your items: {player.items}")
+
+# ------------------------------
+# ITEM EFFECTS
+# ------------------------------
+
+def use_item(item, chambers, player, dealer):
+    if item == "Cigarette":
+        player.hp += 1
+        print("You smoke a cigarette and recover 1 HP.")
+
+    elif item == "Magnifying Glass":
+        print("You inspect the next chamber...")
+        print(f"The next round is: {chambers[0]}")
+
+    elif item == "Handcuffs":
+        print("You handcuff the dealer. They skip their next turn.")
