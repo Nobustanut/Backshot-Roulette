@@ -1,0 +1,59 @@
+import socket
+import threading
+
+HOST = "0.0.0.0"   # Listen on all interfaces
+PORT = 5555
+
+clients = []
+turn = 0  # 0 = Player 1, 1 = Player 2
+
+def handle_client(conn, player_id):
+    global turn
+
+    conn.send(f"CONNECTED:{player_id}".encode())
+
+    while True:
+        try:
+            data = conn.recv(1024).decode()
+            if not data:
+                break
+
+            print(f"Player {player_id} -> {data}")
+
+            # Only accept actions from the player whose turn it is
+            if data.startswith("ACTION:") and turn == player_id:
+                # Broadcast to both players
+                for c in clients:
+                    c.send(f"PLAYER{player_id}:{data}".encode())
+
+                # Switch turn
+                turn = 1 - turn
+
+        except:
+            break
+
+    conn.close()
+    print(f"Player {player_id} disconnected.")
+
+def start_server():
+    global clients
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((HOST, PORT))
+    server.listen(2)
+
+    print("Server started. Waiting for players...")
+
+    # Accept exactly 2 players
+    for i in range(2):
+        conn, addr = server.accept()
+        print(f"Player {i} connected from {addr}")
+        clients.append(conn)
+
+        thread = threading.Thread(target=handle_client, args=(conn, i))
+        thread.start()
+
+    print("Both players connected. Game starting...")
+
+if __name__ == "__main__":
+    start_server()
